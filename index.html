@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Кофе">
+<meta name="theme-color" content="#1a0f00">
+<title>Кофейный журнал</title>
+
+<link rel="manifest" id="manifest-link">
+
+<!-- Apple Touch Icons (inline SVG → PNG via canvas) -->
+<link rel="apple-touch-icon" id="apple-icon">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0e0906;
+  --bg2: #1a1109;
+  --bg3: #251810;
+  --card: #1e130a;
+  --card2: #2a1c0e;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --gold: #c8922a;
+  --gold2: #e8b84b;
+  --cream: #f5ead8;
+  --muted: #8a7560;
+  --text: #f0e6d3;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  overscroll-behavior: none;
+}
+
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+}
+
+/* Header */
+.header {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 100;
+  background: rgba(14,9,6,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid var(--border);
+  padding: 16px 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gold2);
+  letter-spacing: 0.01em;
+}
+
+.header-count {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 0.5px solid var(--border);
+  position: sticky;
+  top: calc(env(safe-area-inset-top) + 53px);
+  z-index: 99;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: color 0.2s;
+  letter-spacing: 0.03em;
+  border-bottom: 2px solid transparent;
+  -webkit-appearance: none;
+}
+
+.tab.active {
+  color: var(--gold2);
+  border-bottom-color: var(--gold);
+}
+
+/* Panels */
+.panel { display: none; padding: 20px 16px; }
+.panel.active { display: block; }
+
+/* Add form */
+.form-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.field input, .field textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 0.5px solid var(--border2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.field input:focus, .field textarea:focus {
+  border-color: var(--gold);
+}
+
+.field textarea { height: 80px; resize: none; }
+
+.field input::placeholder, .field textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* Upload */
+.upload-wrap {
+  border: 1.5px dashed var(--border2);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  position: relative;
+}
+
+.upload-wrap:hover { border-color: var(--gold); }
+
+.upload-placeholder {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.upload-placeholder svg { opacity: 0.5; }
+.upload-placeholder span { font-size: 13px; }
+
+.upload-preview {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  display: none;
+  border-radius: 10px;
+}
+
+.upload-wrap input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Stars */
+.stars-row {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.star-btn {
+  font-size: 32px;
+  cursor: pointer;
+  color: var(--border2);
+  transition: color 0.15s, transform 0.1s;
+  line-height: 1;
+  user-select: none;
+  -webkit-user-select: none;
+  background: none;
+  border: none;
+  padding: 0;
+  -webkit-appearance: none;
+}
+
+.star-btn.on { color: var(--gold); }
+.star-btn:active { transform: scale(0.88); }
+
+/* Submit btn */
+.btn-submit {
+  width: 100%;
+  padding: 15px;
+  background: var(--gold);
+  color: #1a0f00;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.2s, transform 0.1s;
+  -webkit-appearance: none;
+}
+
+.btn-submit:active { transform: scale(0.98); background: var(--gold2); }
+
+/* Sort bar */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.sort-bar::-webkit-scrollbar { display: none; }
+
+.sort-chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  border: 0.5px solid var(--border2);
+  background: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  -webkit-appearance: none;
+}
+
+.sort-chip.active {
+  background: var(--gold);
+  color: #1a0f00;
+  border-color: var(--gold);
+  font-weight: 500;
+}
+
+/* Coffee grid */
+.coffee-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 500px) {
+  .coffee-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.coffee-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.coffee-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.coffee-nophoto {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg3);
+  font-size: 36px;
+}
+
+.coffee-info {
+  padding: 10px 11px 12px;
+}
+
+.coffee-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.coffee-place {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.coffee-stars { display: flex; gap: 2px; }
+.coffee-stars span { font-size: 12px; }
+.coffee-stars .s-on { color: var(--gold); }
+.coffee-stars .s-off { color: var(--border2); }
+
+.badge-score {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(10,6,2,0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--gold2);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+
+.del-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(10,6,2,0.7);
+  border: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  -webkit-appearance: none;
+}
+
+.coffee-card:hover .del-btn { opacity: 1; }
+/* always show on touch */
+@media (hover: none) { .del-btn { opacity: 0.6; } }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+
+.empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; line-height: 1.6; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 90px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--gold);
+  color: #1a0f00;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1000;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* PWA install hint */
+.install-hint {
+  background: var(--card2);
+  border: 0.5px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.install-hint-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.install-hint-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.install-hint-text strong { color: var(--gold2); font-weight: 500; }
+.install-hint-close {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 0 0 8px;
+  line-height: 1;
+  -webkit-appearance: none;
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="header">
+  <div class="header-title">☕ Кофейный журнал</div>
+  <div class="header-count" id="header-count"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('add')">+ Добавить</button>
+  <button class="tab" onclick="switchTab('list')" id="tab-list">Моя коллекция</button>
+</div>
+
+<div class="panel active" id="panel-add">
+
+  <div class="install-hint" id="install-hint" style="display:none">
+    <div class="install-hint-icon">📱</div>
+    <div class="install-hint-text">
+      Чтобы добавить на экран iPhone: нажми <strong>Поделиться</strong> в Safari, затем — <strong>На экран «Домой»</strong>.
+    </div>
+    <button class="install-hint-close" onclick="hideHint()">×</button>
+  </div>
+
+  <div class="form-card">
+    <div class="field">
+      <label>Название / сорт</label>
+      <input type="text" id="inp-name" placeholder="Ethiopia Yirgacheffe" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Кофейня</label>
+      <input type="text" id="inp-place" placeholder="где купила?" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Заметка</label>
+      <textarea id="inp-note" placeholder="вкус, аромат, что запомнилось..."></textarea>
+    </div>
+    <div class="field">
+      <label>Фото</label>
+      <div class="upload-wrap" id="upload-wrap">
+        <div class="upload-placeholder" id="upload-placeholder">
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          <span>Нажми, чтобы выбрать фото</span>
+        </div>
+        <img id="preview" class="upload-preview" alt="">
+        <input type="file" accept="image/*" id="file-input">
+      </div>
+    </div>
+    <div class="field">
+      <label>Оценка</label>
+      <div class="stars-row" id="stars-row">
+        <button class="star-btn" data-v="1">★</button>
+        <button class="star-btn" data-v="2">★</button>
+        <button class="star-btn" data-v="3">★</button>
+        <button class="star-btn" data-v="4">★</button>
+        <button class="star-btn" data-v="5">★</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-submit" id="btn-submit">Сохранить в журнал</button>
+</div>
+
+<div class="panel" id="panel-list">
+  <div class="sort-bar">
+    <button class="sort-chip active" data-sort="rating-desc">⭐ Лучшие</button>
+    <button class="sort-chip" data-sort="rating-asc">↑ По оценке</button>
+    <button class="sort-chip" data-sort="date-desc">🕐 Новые</button>
+    <button class="sort-chip" data-sort="date-asc">📅 Старые</button>
+  </div>
+  <div class="coffee-grid" id="grid"></div>
+  <div class="empty-state" id="empty" style="display:none">
+    <div class="emoji">☕</div>
+    <p>Пока нет записей.<br>Добавь свой первый кофе!</p>
+  </div>
+</div>
+
+<script>
+// Storage key
+const KEY = 'cj_entries_v1';
+const HINT_KEY = 'cj_hint_hidden';
+
+let entries = [];
+let rating = 0;
+let imgData = null;
+let currentSort = 'rating-desc';
+let activeTab = 'add';
+
+// Load
+function load() {
+  try {
+    const d = localStorage.getItem(KEY);
+    if (d) entries = JSON.parse(d);
+  } catch(e) { entries = []; }
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(entries)); } catch(e) {}
+}
+
+// Install hint
+function showInstallHint() {
+  const hidden = localStorage.getItem(HINT_KEY);
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  if (!hidden && isIOS && !isStandalone) {
+    document.getElementById('install-hint').style.display = 'flex';
+  }
+}
+
+window.hideHint = function() {
+  localStorage.setItem(HINT_KEY, '1');
+  document.getElementById('install-hint').style.display = 'none';
+};
+
+// Tabs
+window.switchTab = function(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='add')||(i===1&&tab==='list')));
+  document.getElementById('panel-add').classList.toggle('active', tab==='add');
+  document.getElementById('panel-list').classList.toggle('active', tab==='list');
+  if (tab === 'list') render();
+};
+
+// Rating
+function setRating(v) {
+  rating = v;
+  document.querySelectorAll('.star-btn').forEach(s => s.classList.toggle('on', +s.dataset.v <= v));
+}
+
+document.getElementById('stars-row').addEventListener('click', e => {
+  const s = e.target.closest('.star-btn');
+  if (s) setRating(+s.dataset.v);
+});
+
+// File upload
+document.getElementById('file-input').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    imgData = ev.target.result;
+    const prev = document.getElementById('preview');
+    prev.src = imgData;
+    prev.style.display = 'block';
+    document.getElementById('upload-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(f);
+});
+
+// Submit
+document.getElementById('btn-submit').addEventListener('click', () => {
+  const name = document.getElementById('inp-name').value.trim();
+  if (!name) {
+    document.getElementById('inp-name').focus();
+    showToast('Введи название кофе');
+    return;
+  }
+  const entry = {
+    id: Date.now(),
+    name,
+    place: document.getElementById('inp-place').value.trim(),
+    note: document.getElementById('inp-note').value.trim(),
+    rating,
+    img: imgData,
+    date: Date.now()
+  };
+  entries.unshift(entry);
+  save();
+  // Reset
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-place').value = '';
+  document.getElementById('inp-note').value = '';
+  setRating(0);
+  imgData = null;
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('upload-placeholder').style.display = 'flex';
+  document.getElementById('file-input').value = '';
+  updateCount();
+  showToast('Кофе добавлен ☕');
+  switchTab('list');
+});
+
+// Toast
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Delete
+window.deleteEntry = function(id) {
+  entries = entries.filter(e => e.id !== id);
+  save();
+  updateCount();
+  render();
+};
+
+// Stars HTML
+function starsHtml(r) {
+  let h = '';
+  for (let i = 1; i <= 5; i++) h += `<span class="${i<=r?'s-on':'s-off'}">★</span>`;
+  return h;
+}
+
+// Sort
+function getSorted() {
+  const arr = [...entries];
+  if (currentSort === 'rating-desc') arr.sort((a,b) => b.rating - a.rating);
+  else if (currentSort === 'rating-asc') arr.sort((a,b) => a.rating - b.rating);
+  else if (currentSort === 'date-desc') arr.sort((a,b) => b.date - a.date);
+  else arr.sort((a,b) => a.date - b.date);
+  return arr;
+}
+
+// Render
+function render() {
+  const sorted = getSorted();
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  if (!sorted.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = sorted.map(e => `
+    <div class="coffee-card">
+      <button class="del-btn" onclick="deleteEntry(${e.id})" aria-label="Удалить">×</button>
+      ${e.rating ? `<div class="badge-score">${e.rating}/5</div>` : ''}
+      ${e.img
+        ? `<img class="coffee-photo" src="${e.img}" alt="${e.name}" loading="lazy">`
+        : `<div class="coffee-nophoto">☕</div>`
+      }
+      <div class="coffee-info">
+        <div class="coffee-name" title="${e.name}">${e.name}</div>
+        <div class="coffee-place">${e.place || '—'}</div>
+        <div class="coffee-stars">${starsHtml(e.rating)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Sort chips
+document.querySelectorAll('.sort-chip').forEach(c => {
+  c.addEventListener('click', () => {
+    currentSort = c.dataset.sort;
+    document.querySelectorAll('.sort-chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    render();
+  });
+});
+
+// Count
+function updateCount() {
+  const el = document.getElementById('header-count');
+  el.textContent = entries.length ? `${entries.length} записей` : '';
+}
+
+// Manifest (inline)
+function injectManifest() {
+  const manifest = {
+    name: 'Кофейный журнал',
+    short_name: 'Кофе',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#0e0906',
+    theme_color: '#1a0f00',
+    icons: [
+      { src: generateIcon(192), sizes: '192x192', type: 'image/png' },
+      { src: generateIcon(512), sizes: '512x512', type: 'image/png' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  document.getElementById('manifest-link').href = url;
+}
+
+function generateIcon(size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  // Background
+  ctx.fillStyle = '#1a0f00';
+  ctx.fillRect(0,0,size,size);
+  // Rounded corners
+  const r = size * 0.22;
+  ctx.beginPath();
+  ctx.moveTo(r,0); ctx.lineTo(size-r,0);
+  ctx.quadraticCurveTo(size,0,size,r);
+  ctx.lineTo(size,size-r);
+  ctx.quadraticCurveTo(size,size,size-r,size);
+  ctx.lineTo(r,size); ctx.quadraticCurveTo(0,size,0,size-r);
+  ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0);
+  ctx.clip();
+  ctx.fillStyle = '#1a0f00';
+  ctx.fillRect(0,0,size,size);
+  // Coffee emoji
+  ctx.font = `${size*0.55}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('☕', size/2, size/2 + size*0.04);
+  return canvas.toDataURL('image/png');
+}
+
+// Apply apple touch icon
+function setAppleIcon() {
+  const icon = generateIcon(180);
+  document.getElementById('apple-icon').href = icon;
+}
+
+// Init
+load();
+updateCount();
+injectManifest();
+setAppleIcon();
+showInstallHint();
+</script>
+</body>
+</html>
