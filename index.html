@@ -83,8 +83,12 @@ body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area
 .btn-submit { width: 100%; padding: 16px; background: var(--accent); color: var(--cream-on-accent); font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; border: none; border-radius: 12px; cursor: pointer; letter-spacing: 0.02em; transition: background 0.2s, transform 0.1s; -webkit-appearance: none; }
 .btn-submit:active { transform: scale(0.98); background: var(--accent2); }
 
-.sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
 .sort-bar::-webkit-scrollbar { display: none; }
+.backup-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+.backup-btn { flex: 1; text-align: center; padding: 8px 10px; border-radius: 10px; font-family: 'EB Garamond', serif; font-size: 14px; color: var(--accent2); border: 0.5px solid var(--border2); background: var(--card2); cursor: pointer; -webkit-appearance: none; transition: background 0.15s; }
+.backup-btn:active { background: var(--bg3); }
+.backup-btn input { display: none; }
 .sort-chip { flex-shrink: 0; padding: 6px 15px; border-radius: 20px; font-family: 'EB Garamond', serif; font-size: 14px; font-weight: 400; color: var(--muted); border: 0.5px solid var(--border2); background: var(--card); cursor: pointer; transition: all 0.15s; white-space: nowrap; -webkit-appearance: none; }
 .sort-chip.active { background: var(--accent); color: var(--cream-on-accent); border-color: var(--accent); font-weight: 500; }
 
@@ -213,6 +217,12 @@ body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area
     <button class="sort-chip" data-sort="rating-asc">↑ По оценке</button>
     <button class="sort-chip" data-sort="date-desc">Новые</button>
     <button class="sort-chip" data-sort="date-asc">Старые</button>
+  </div>
+  <div class="backup-bar">
+    <button class="backup-btn" onclick="exportData()">Сохранить копию</button>
+    <label class="backup-btn">Восстановить
+      <input type="file" accept="application/json,.json" id="import-file">
+    </label>
   </div>
   <div class="coffee-grid" id="grid"></div>
   <div class="empty-state" id="empty" style="display:none">
@@ -397,6 +407,48 @@ document.getElementById('btn-submit').addEventListener('click', () => {
 
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
 window.deleteEntry = function(id) { entries = entries.filter(e => e.id !== id); save(); updateCount(); render(); };
+
+window.exportData = function() {
+  if (!entries.length) { showToast('Нет записей для сохранения'); return; }
+  const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  const stamp = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  a.href = url;
+  a.download = 'coffee-journal-' + stamp + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Копия сохранена');
+};
+
+document.getElementById('import-file').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('bad');
+      const existingIds = new Set(entries.map(x => x.id));
+      let added = 0;
+      data.forEach(item => {
+        if (item && item.id != null && item.name && !existingIds.has(item.id)) {
+          entries.push(item); existingIds.add(item.id); added++;
+        }
+      });
+      save(); updateCount(); render();
+      showToast(added ? `Добавлено записей: ${added}` : 'Новых записей нет');
+    } catch (err) {
+      showToast('Не удалось прочитать файл');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(f);
+});
+
 
 let editingId = null;
 let editRating = 0;
