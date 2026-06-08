@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Кофе">
-<meta name="theme-color" content="#e7dcc6">
+<meta name="theme-color" content="#fdfaf3">
 <title>Кофейный журнал</title>
 <link rel="manifest" id="manifest-link">
 <link rel="apple-touch-icon" id="apple-icon">
@@ -15,26 +15,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=EB+Garamond:wght@400;500&display=swap');
 
 :root {
-  --bg: #e7dcc6;       /* warm beige page */
-  --bg2: #ece3d1;      /* tab strip */
-  --bg3: #f6f0e3;      /* input fields */
-  --card: #f8f3e8;     /* cards */
-  --card2: #f1e8d6;
-  --border: rgba(74,54,33,0.13);
-  --border2: rgba(74,54,33,0.24);
-  --accent: #9a6b3c;   /* coffee brown */
-  --accent2: #7c5530;  /* darker brown for text on accent bg */
-  --gold: #c08a2e;     /* stars / notes */
-  --ink: #3b2c1c;      /* espresso text */
-  --muted: #8a7256;    /* muted brown */
-  --cream-on-accent: #fdf8ee;
+  --bg: #fdfaf3;       /* single light cream (matches card) */
+  --bg2: #fdfaf3;      /* tab strip — same cream */
+  --bg3: #fbf7ef;      /* input fields */
+  --card: #fdfaf3;     /* cards */
+  --card2: #f1e9d7;
+  --border: rgba(52,33,15,0.12);
+  --border2: rgba(52,33,15,0.22);
+  --accent: #3f7c9c;   /* blue — interactive */
+  --accent2: #2f627e;  /* darker blue for pressed/text */
+  --gold: #5e92ab;     /* stars — light blue */
+  --ink: #34210f;      /* coffee-bean dark brown */
+  --muted: #8a7156;    /* muted brown */
+  --cream-on-accent: #fbf7ef;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { min-height: 100%; background: var(--bg); color: var(--ink); font-family: 'EB Garamond', Georgia, serif; font-weight: 400; overscroll-behavior: none; }
 body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area-inset-bottom) + 40px); }
 
-.header { position: sticky; top: env(safe-area-inset-top); z-index: 100; background: rgba(231,220,198,0.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 0.5px solid var(--border); padding: 16px 20px 14px; display: flex; align-items: center; justify-content: space-between; }
-.header-title { font-family: 'Fraunces', serif; font-size: 23px; font-weight: 600; color: var(--accent2); letter-spacing: 0.005em; }
+.header { position: sticky; top: env(safe-area-inset-top); z-index: 100; background: rgba(253,250,243,0.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 0.5px solid var(--border); padding: 16px 20px 14px; display: flex; align-items: center; justify-content: space-between; }
+.header-title { font-family: 'Fraunces', serif; font-size: 23px; font-weight: 600; color: var(--ink); letter-spacing: 0.005em; }
 .header-count { font-family: 'EB Garamond', serif; font-size: 13px; color: var(--muted); letter-spacing: 0.04em; }
 
 .tabs { display: flex; background: var(--bg2); border-bottom: 0.5px solid var(--border); position: sticky; top: calc(env(safe-area-inset-top) + 56px); z-index: 99; }
@@ -102,8 +102,8 @@ body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area
 .coffee-stars span { font-size: 13px; }
 .coffee-stars .s-on { color: var(--gold); }
 .coffee-stars .s-off { color: var(--border2); }
-.badge-score { position: absolute; top: 8px; right: 8px; background: rgba(59,44,28,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: var(--cream-on-accent); font-family: 'Fraunces', serif; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 20px; }
-.del-btn { position: absolute; top: 8px; left: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(59,44,28,0.6); border: none; color: rgba(253,248,238,0.9); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; -webkit-appearance: none; }
+.badge-score { position: absolute; top: 8px; right: 8px; background: rgba(52,33,15,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: var(--cream-on-accent); font-family: 'Fraunces', serif; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 20px; }
+.del-btn { position: absolute; top: 8px; left: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(52,33,15,0.6); border: none; color: rgba(253,248,238,0.9); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; -webkit-appearance: none; }
 .coffee-card:hover .del-btn { opacity: 1; }
 @media (hover: none) { .del-btn { opacity: 0.65; } }
 
@@ -114,9 +114,9 @@ body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area
 .toast { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 30px); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--accent); color: var(--cream-on-accent); padding: 11px 22px; border-radius: 22px; font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 1000; box-shadow: 0 4px 14px rgba(74,54,33,0.18); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-.modal-overlay { position: fixed; inset: 0; background: rgba(40,28,16,0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 2000; display: none; align-items: flex-start; justify-content: center; padding: calc(env(safe-area-inset-top) + 24px) 16px 24px; overflow-y: auto; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(52,33,15,0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 2000; display: none; align-items: flex-start; justify-content: center; padding: calc(env(safe-area-inset-top) + 24px) 16px 24px; overflow-y: auto; }
 .modal-overlay.show { display: flex; }
-.modal { background: var(--card); border: 0.5px solid var(--border2); border-radius: 18px; padding: 22px; width: 100%; max-width: 440px; box-shadow: 0 12px 40px rgba(40,28,16,0.3); }
+.modal { background: var(--card); border: 0.5px solid var(--border2); border-radius: 18px; padding: 22px; width: 100%; max-width: 440px; box-shadow: 0 12px 40px rgba(52,33,15,0.28); }
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .modal-head h2 { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 600; color: var(--accent2); }
 .modal-close { background: none; border: none; font-size: 24px; color: var(--muted); cursor: pointer; line-height: 1; padding: 0 4px; -webkit-appearance: none; }
@@ -517,16 +517,31 @@ document.querySelectorAll('.sort-chip').forEach(c => {
 function updateCount() { document.getElementById('header-count').textContent = entries.length ? `${entries.length} записей` : ''; }
 
 function injectManifest() {
-  const manifest = { name: 'Кофейный журнал', short_name: 'Кофе', start_url: '.', display: 'standalone', background_color: '#e7dcc6', theme_color: '#e7dcc6', icons: [ { src: generateIcon(192), sizes: '192x192', type: 'image/png' }, { src: generateIcon(512), sizes: '512x512', type: 'image/png' } ] };
+  const manifest = { name: 'Кофейный журнал', short_name: 'Кофе', start_url: '.', display: 'standalone', background_color: '#fdfaf3', theme_color: '#fdfaf3', icons: [ { src: generateIcon(192), sizes: '192x192', type: 'image/png' }, { src: generateIcon(512), sizes: '512x512', type: 'image/png' } ] };
   const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
   document.getElementById('manifest-link').href = URL.createObjectURL(blob);
 }
 function generateIcon(size) {
   const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#9a6b3c'; ctx.fillRect(0,0,size,size);
-  ctx.font = `${size*0.55}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('☕', size/2, size/2 + size*0.04);
+  const cx = size/2, cy = size/2;
+  // blue background
+  ctx.fillStyle = '#3f7c9c'; ctx.fillRect(0,0,size,size);
+  const circle = (r, fill) => { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fillStyle = fill; ctx.fill(); };
+  circle(size*0.42, '#fdfaf3');  // cream rim
+  circle(size*0.36, '#5a3a22');  // crema ring
+  circle(size*0.335, '#34210f'); // coffee surface (bean)
+  // latte-art heart (cream)
+  const s = size*0.0125;
+  ctx.beginPath();
+  for (let deg = 0; deg <= 360; deg += 4) {
+    const t = deg * Math.PI/180;
+    const x = 16*Math.pow(Math.sin(t),3);
+    const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+    const px = cx + x*s, py = cy - y*s;
+    if (deg === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath(); ctx.fillStyle = '#fdfaf3'; ctx.fill();
   return canvas.toDataURL('image/png');
 }
 function setAppleIcon() { document.getElementById('apple-icon').href = generateIcon(180); }
