@@ -90,7 +90,7 @@ body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area
 
 .coffee-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (min-width: 500px) { .coffee-grid { grid-template-columns: repeat(3, 1fr); } }
-.coffee-card { background: var(--card); border: 0.5px solid var(--border); border-radius: 14px; overflow: hidden; position: relative; box-shadow: 0 1px 3px rgba(74,54,33,0.05); animation: fadeIn 0.25s ease; }
+.coffee-card { background: var(--card); border: 0.5px solid var(--border); border-radius: 14px; overflow: hidden; position: relative; cursor: pointer; box-shadow: 0 1px 3px rgba(74,54,33,0.05); animation: fadeIn 0.25s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .coffee-photo { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
 .coffee-nophoto { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--card2); font-size: 36px; }
@@ -486,8 +486,8 @@ function render() {
   if (!sorted.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   grid.innerHTML = sorted.map(e => `
-    <div class="coffee-card" onclick="openEdit(${e.id})">
-      <button class="del-btn" onclick="event.stopPropagation(); deleteEntry(${e.id})" aria-label="Удалить">×</button>
+    <div class="coffee-card" data-id="${e.id}">
+      <button class="del-btn" data-del="${e.id}" aria-label="Удалить">×</button>
       ${e.rating ? `<div class="badge-score">${e.rating}/5</div>` : ''}
       ${e.img ? `<img class="coffee-photo" src="${e.img}" alt="${e.name}" loading="lazy">` : `<div class="coffee-nophoto">☕</div>`}
       <div class="coffee-info">
@@ -498,6 +498,13 @@ function render() {
       </div>
     </div>`).join('');
 }
+
+document.getElementById('grid').addEventListener('click', e => {
+  const del = e.target.closest('.del-btn');
+  if (del) { e.stopPropagation(); deleteEntry(+del.dataset.del); return; }
+  const card = e.target.closest('.coffee-card');
+  if (card) openEdit(+card.dataset.id);
+});
 
 document.querySelectorAll('.sort-chip').forEach(c => {
   c.addEventListener('click', () => {
