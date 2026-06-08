@@ -114,6 +114,22 @@ body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area
 .toast { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 30px); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--accent); color: var(--cream-on-accent); padding: 11px 22px; border-radius: 22px; font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 1000; box-shadow: 0 4px 14px rgba(74,54,33,0.18); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+.modal-overlay { position: fixed; inset: 0; background: rgba(40,28,16,0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 2000; display: none; align-items: flex-start; justify-content: center; padding: calc(env(safe-area-inset-top) + 24px) 16px 24px; overflow-y: auto; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card); border: 0.5px solid var(--border2); border-radius: 18px; padding: 22px; width: 100%; max-width: 440px; box-shadow: 0 12px 40px rgba(40,28,16,0.3); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.modal-head h2 { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 600; color: var(--accent2); }
+.modal-close { background: none; border: none; font-size: 24px; color: var(--muted); cursor: pointer; line-height: 1; padding: 0 4px; -webkit-appearance: none; }
+.modal-photo { width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 6px; display: none; }
+.modal-photo-edit { position: relative; }
+.modal-rephoto { display: inline-block; font-family: 'EB Garamond', serif; font-size: 13px; color: var(--accent); cursor: pointer; margin-bottom: 14px; border-bottom: 0.5px solid var(--accent); }
+.modal-rephoto input { display: none; }
+.modal-actions { display: flex; gap: 10px; margin-top: 6px; }
+.modal-btn-save { flex: 1; padding: 14px; background: var(--accent); color: var(--cream-on-accent); font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; border: none; border-radius: 12px; cursor: pointer; -webkit-appearance: none; transition: background 0.2s, transform 0.1s; }
+.modal-btn-save:active { transform: scale(0.98); background: var(--accent2); }
+.modal-btn-del { padding: 14px 16px; background: none; color: #a8472e; font-family: 'EB Garamond', serif; font-size: 15px; border: 0.5px solid rgba(168,71,46,0.4); border-radius: 12px; cursor: pointer; -webkit-appearance: none; }
+.modal-btn-del:active { background: rgba(168,71,46,0.08); }
+
 .install-hint { background: var(--card2); border: 0.5px solid var(--border2); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 12px; align-items: flex-start; }
 .install-hint-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
 .install-hint-text { font-size: 15px; color: var(--muted); line-height: 1.55; }
@@ -202,6 +218,51 @@ body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area
   <div class="empty-state" id="empty" style="display:none">
     <div class="emoji">☕</div>
     <p>Пока нет записей.<br>Добавь свой первый кофе!</p>
+  </div>
+</div>
+
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Редактировать</h2>
+      <button class="modal-close" onclick="closeEdit()" aria-label="Закрыть">×</button>
+    </div>
+    <div class="modal-photo-edit">
+      <img id="edit-photo" class="modal-photo" alt="">
+    </div>
+    <label class="modal-rephoto">Заменить фото
+      <input type="file" accept="image/*" id="edit-file">
+    </label>
+    <div class="field">
+      <label>Название / сорт</label>
+      <input type="text" id="edit-name" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Ноты вкуса</label>
+      <input type="text" id="edit-notes" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Кофейня</label>
+      <input type="text" id="edit-place" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Заметка</label>
+      <textarea id="edit-note"></textarea>
+    </div>
+    <div class="field">
+      <label>Оценка</label>
+      <div class="stars-row" id="edit-stars">
+        <button class="star-btn" data-v="1">★</button>
+        <button class="star-btn" data-v="2">★</button>
+        <button class="star-btn" data-v="3">★</button>
+        <button class="star-btn" data-v="4">★</button>
+        <button class="star-btn" data-v="5">★</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn-del" onclick="deleteFromEdit()">Удалить</button>
+      <button class="modal-btn-save" onclick="saveEdit()">Сохранить</button>
+    </div>
   </div>
 </div>
 
@@ -336,6 +397,77 @@ document.getElementById('btn-submit').addEventListener('click', () => {
 
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
 window.deleteEntry = function(id) { entries = entries.filter(e => e.id !== id); save(); updateCount(); render(); };
+
+let editingId = null;
+let editRating = 0;
+let editImg = null;
+
+window.openEdit = function(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  editingId = id;
+  editImg = e.img || null;
+  editRating = e.rating || 0;
+  document.getElementById('edit-name').value = e.name || '';
+  document.getElementById('edit-notes').value = e.notes || '';
+  document.getElementById('edit-place').value = e.place || '';
+  document.getElementById('edit-note').value = e.note || '';
+  const photo = document.getElementById('edit-photo');
+  if (editImg) { photo.src = editImg; photo.style.display = 'block'; } else { photo.style.display = 'none'; }
+  setEditRating(editRating);
+  document.getElementById('edit-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeEdit = function() {
+  document.getElementById('edit-modal').classList.remove('show');
+  document.body.style.overflow = '';
+  editingId = null;
+  document.getElementById('edit-file').value = '';
+};
+
+function setEditRating(v) {
+  editRating = v;
+  document.querySelectorAll('#edit-stars .star-btn').forEach(s => s.classList.toggle('on', +s.dataset.v <= v));
+}
+document.getElementById('edit-stars').addEventListener('click', e => { const s = e.target.closest('.star-btn'); if (s) setEditRating(+s.dataset.v); });
+
+document.getElementById('edit-file').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    editImg = await downscale(ev.target.result, 900);
+    const photo = document.getElementById('edit-photo');
+    photo.src = editImg; photo.style.display = 'block';
+  };
+  reader.readAsDataURL(f);
+});
+
+window.saveEdit = function() {
+  const e = entries.find(x => x.id === editingId);
+  if (!e) return;
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) { showToast('Введи название кофе'); return; }
+  e.name = name;
+  e.notes = document.getElementById('edit-notes').value.trim();
+  e.place = document.getElementById('edit-place').value.trim();
+  e.note = document.getElementById('edit-note').value.trim();
+  e.rating = editRating;
+  e.img = editImg;
+  save(); render(); closeEdit(); showToast('Сохранено');
+};
+
+window.deleteFromEdit = function() {
+  if (editingId == null) return;
+  const id = editingId;
+  closeEdit();
+  deleteEntry(id);
+  showToast('Удалено');
+};
+
+document.getElementById('edit-modal').addEventListener('click', e => { if (e.target.id === 'edit-modal') closeEdit(); });
+
 function starsHtml(r) { let h = ''; for (let i = 1; i <= 5; i++) h += `<span class="${i<=r?'s-on':'s-off'}">★</span>`; return h; }
 
 function getSorted() {
@@ -354,8 +486,8 @@ function render() {
   if (!sorted.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   grid.innerHTML = sorted.map(e => `
-    <div class="coffee-card">
-      <button class="del-btn" onclick="deleteEntry(${e.id})" aria-label="Удалить">×</button>
+    <div class="coffee-card" onclick="openEdit(${e.id})">
+      <button class="del-btn" onclick="event.stopPropagation(); deleteEntry(${e.id})" aria-label="Удалить">×</button>
       ${e.rating ? `<div class="badge-score">${e.rating}/5</div>` : ''}
       ${e.img ? `<img class="coffee-photo" src="${e.img}" alt="${e.name}" loading="lazy">` : `<div class="coffee-nophoto">☕</div>`}
       <div class="coffee-info">
